@@ -14,7 +14,6 @@ def __add_maven_step(platform_config, build_step, step_cmd, post_step_cmds = [])
     if not hasattr(platform_config, "prepare_maven"):
         platform_config.prepare_maven = lambda config: \
             u.clearNativeLibs(config) + \
-            u.copyNativeLibs(config) + \
             u.setJavaHome(config)
     #-----------------------------------------------------------------------
     # add a build-step that involves running maven and requires some preparation

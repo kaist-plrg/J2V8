@@ -26,20 +26,20 @@ linux_config.set_file_abis({
 })
 
 #-----------------------------------------------------------------------
-def build_node_js(config):
-    return [
-        "cd ./node",
-        """./configure              \
-            --without-intl          \
-            --without-inspector     \
-            --dest-cpu=$ARCH        \
-            --without-snapshot      \
-            --enable-static""",
-        # "make clean", # TODO: make this an on/off option
-        "CFLAGS=-fPIC CXXFLAGS=-fPIC make -j4 > node.build.output 2>&1",
-    ]
+# def build_node_js(config):
+#     return [
+#         "cd ./node",
+#         """./configure              \
+#             --without-intl          \
+#             --without-inspector     \
+#             --dest-cpu=$ARCH        \
+#             --without-snapshot      \
+#             --enable-static""",
+#         # "make clean", # TODO: make this an on/off option
+#         "CFLAGS=-fPIC CXXFLAGS=-fPIC make -j4 > node.build.output 2>&1",
+#     ]
 
-linux_config.build_step(c.build_node_js, build_node_js)
+# linux_config.build_step(c.build_node_js, build_node_js)
 #-----------------------------------------------------------------------
 def build_j2v8_cmake(config):
     cmake_vars = cmu.setAllVars(config)
@@ -86,5 +86,5 @@ linux_config.build_step(c.build_j2v8_optimize, build_j2v8_optimize)
 #-----------------------------------------------------------------------
 j.add_java_build_step(linux_config)
 #-----------------------------------------------------------------------
-j.add_java_test_step(linux_config)
+# j.add_java_test_step(linux_config)
 #-----------------------------------------------------------------------
