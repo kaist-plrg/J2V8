@@ -410,6 +410,14 @@ public class V8 extends V8Object {
         }
     }
 
+    public void resetContext() {
+        if (isReleased()) {
+            return;
+        }
+        checkThread();
+        _resetIsolate(v8RuntimePtr);
+    }
+
     private void releaseNativeMethodDescriptors() {
         Set<Long> nativeMethodDescriptors = functionRegistry.keySet();
         for (Long nativeMethodDescriptor : nativeMethodDescriptors) {
@@ -1467,6 +1475,8 @@ public class V8 extends V8Object {
     private native void _releaseRuntime(long v8RuntimePtr);
 
     private native long _createIsolate(String globalAlias);
+
+    private native void _resetIsolate(long v8RuntimePtr);
 
     private native long _createInspector(long v8RuntimePtr, final V8InspectorDelegate inspectorDelegate, final String contextName);
 

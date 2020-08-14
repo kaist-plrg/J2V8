@@ -199,6 +199,7 @@ public:
   jobject v8;
   jthrowable pendingException;
   V8Inspector* inspector;
+  ArrayBuffer::Allocator* array_buffer_allocator;
 };
 
 std::unique_ptr<v8::Platform> v8Platform = nullptr;
@@ -519,6 +520,9 @@ JNIEXPORT jlong JNICALL Java_com_eclipsesource_v8_V8__1createIsolate
     V8Runtime* runtime = new V8Runtime();
     v8::Isolate::CreateParams create_params;
     create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+    runtime->array_buffer_allocator = create_params.array_buffer_allocator;
+    runtime->locker = nullptr;
+    runtime->inspector = nullptr;
     runtime->isolate = v8::Isolate::New(create_params);
     Locker locker(runtime->isolate);
     v8::Isolate::Scope isolate_scope(runtime->isolate);
@@ -541,6 +545,49 @@ JNIEXPORT jlong JNICALL Java_com_eclipsesource_v8_V8__1createIsolate
       runtime->globalObject->Reset(runtime->isolate, context->Global()->GetPrototype()->ToObject(context).ToLocalChecked());
     }
     return reinterpret_cast<jlong>(runtime);
+}
+
+JNIEXPORT void JNICALL Java_com_eclipsesource_v8_V8__1resetIsolate
+ (JNIEnv *env, jobject v8, jlong v8RuntimePtr) {
+    if (v8RuntimePtr == 0) {
+      return;
+    }
+    V8Runtime* runtime = reinterpret_cast<V8Runtime*>(v8RuntimePtr);
+    if (runtime->globalObject != nullptr) {
+      runtime->globalObject->Reset();
+      delete(runtime->globalObject);
+    }
+    HandleScope handle_scope(runtime->isolate);
+    Handle<ObjectTemplate> globalObject = ObjectTemplate::New(runtime->isolate);
+    Handle<Context> context = Context::New(runtime->isolate, nullptr, globalObject);
+    runtime->context_.Reset(runtime->isolate, context);
+    runtime->globalObject = new Persistent<Object>;
+    runtime->globalObject->Reset(runtime->isolate, context->Global()->GetPrototype()->ToObject(context).ToLocalChecked());
+    // delete(runtime->array_buffer_allocator);
+    // v8::Isolate::CreateParams create_params;
+    // create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+    // runtime->array_buffer_allocator = create_params.array_buffer_allocator;
+    // if (runtime->locker != nullptr) delete(runtime->locker);
+    // runtime->locker = nullptr;
+    // if (runtime->inspector != nullptr) delete(runtime->inspector);
+    // runtime->inspector = nullptr;
+    // if (runtime->globalObject != nullptr) {
+    //   runtime->globalObject->Reset();
+    //   delete(runtime->globalObject);
+    // }
+    // runtime->context_.Reset();
+    // runtime->isolate->Dispose();
+    // runtime->isolate = v8::Isolate::New(create_params);
+    // Locker locker(runtime->isolate);
+    // v8::Isolate::Scope isolate_scope(runtime->isolate);
+    // runtime->v8 = env->NewGlobalRef(v8);
+    // runtime->pendingException = nullptr;
+    // HandleScope handle_scope(runtime->isolate);
+    // Handle<ObjectTemplate> globalObject = ObjectTemplate::New(runtime->isolate);
+    // Handle<Context> context = Context::New(runtime->isolate, nullptr, globalObject);
+    // runtime->context_.Reset(runtime->isolate, context);
+    // runtime->globalObject = new Persistent<Object>;
+    // runtime->globalObject->Reset(runtime->isolate, context->Global()->GetPrototype()->ToObject(context).ToLocalChecked());
 }
 
 JNIEXPORT jlong JNICALL Java_com_eclipsesource_v8_V8__1createInspector
@@ -790,11 +837,21 @@ JNIEXPORT void JNICALL Java_com_eclipsesource_v8_V8__1releaseRuntime
   if (v8RuntimePtr == 0) {
     return;
   }
+  V8Runtime* runtime = reinterpret_cast<V8Runtime*>(v8RuntimePtr);
+  delete(runtime->array_buffer_allocator);
+  if (runtime->locker != nullptr) delete(runtime->locker);
+  runtime->locker = nullptr;
+  if (runtime->inspector != nullptr) delete(runtime->inspector);
+  runtime->inspector = nullptr;
+  if (runtime->globalObject != nullptr) {
+    runtime->globalObject->Reset();
+    delete(runtime->globalObject);
+  }
+  runtime->globalObject = nullptr;
   Isolate* isolate = getIsolate(env, v8RuntimePtr);
   reinterpret_cast<V8Runtime*>(v8RuntimePtr)->context_.Reset();
   reinterpret_cast<V8Runtime*>(v8RuntimePtr)->isolate->Dispose();
   env->DeleteGlobalRef(reinterpret_cast<V8Runtime*>(v8RuntimePtr)->v8);
-  V8Runtime* runtime = reinterpret_cast<V8Runtime*>(v8RuntimePtr);
   delete(runtime);
 }
 

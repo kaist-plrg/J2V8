@@ -117,6 +117,14 @@ JNIEXPORT jlong JNICALL Java_com_eclipsesource_v8_V8__1createIsolate
 
 /*
  * Class:     com_eclipsesource_v8_V8
+ * Method:    _resetIsolate
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_eclipsesource_v8_V8__1resetIsolate
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     com_eclipsesource_v8_V8
  * Method:    _createInspector
  * Signature: (JLcom/eclipsesource/v8/inspector/V8InspectorDelegate;Ljava/lang/String;)J
  */
